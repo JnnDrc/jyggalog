@@ -1,5 +1,3 @@
-#include "jyggalog.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -7,8 +5,11 @@
 #include <time.h>
 #include <string.h>
 
+#include "jyggalog.h"
+
 #define BMASK(i,m) (i & m)
 
+// configuration variables
 //-----------------------------------------------
 static enum jl_level ___jl_log_level = JL_INFO; // Log level
 //-----------------------------------------------
@@ -16,6 +17,8 @@ static uint8_t ___jl_style = JL_STYLE_DEFAULT;  // output style
 //-----------------------------------------------
 static void (*___jl_fatal_hook)(void) = NULL;   // fatal hook function
 //-----------------------------------------------
+
+//------------------------------------------------------------------------------
 
 void jl_set_level(enum jl_level level){
     ___jl_log_level = level;
@@ -29,9 +32,11 @@ void jl_set_fatal_hook(void (*func)(void)){
     ___jl_fatal_hook = func;
 }
 
-int _jl_log(enum jl_level level, const char* file_name, int line_number,FILE* stream, const char* message){
+//------------------------------------------------------------------------------
+
+int jl_jlog(enum jl_level level, const char* file_name, int line_number,FILE* stream, const char* message){
     if(level < ___jl_log_level) return 0;
-    // formating: [level/ time/date | line file]
+    // formating: [time-date|level|file:line]: message
     char buf[JL_MAX_MSG_LENGTH] = {0};
     int len = 0;
     
@@ -59,10 +64,10 @@ int _jl_log(enum jl_level level, const char* file_name, int line_number,FILE* st
             len += snprintf(buf+len, sizeof(buf) - len,"\x1b[36mDEBUG\x1b[0m");
             break;
         case JL_INFO:
-            len += snprintf(buf+len, sizeof(buf) - len,"\x1b[32mINFO\x1b[0m");
+            len += snprintf(buf+len, sizeof(buf) - len,"\x1b[32mINFO\x1b[0m ");
             break;
         case JL_WARN:
-            len += snprintf(buf+len, sizeof(buf) - len,"\x1b[33mWARN\x1b[0m");
+            len += snprintf(buf+len, sizeof(buf) - len,"\x1b[33mWARN\x1b[0m ");
             break;
         case JL_ERROR:  
             len += snprintf(buf+len, sizeof(buf) - len,"\x1b[31mERROR\x1b[0m");
@@ -71,6 +76,7 @@ int _jl_log(enum jl_level level, const char* file_name, int line_number,FILE* st
             len += snprintf(buf+len, sizeof(buf) - len,"\x1b[35mFATAL\x1b[0m");
           break;
         default:
+            return -1;
             break;
         }
     }else{
@@ -80,10 +86,10 @@ int _jl_log(enum jl_level level, const char* file_name, int line_number,FILE* st
             len += snprintf(buf+len, sizeof(buf) - len,"DEBUG");
             break;
         case JL_INFO:
-            len += snprintf(buf+len, sizeof(buf) - len,"INFO");
+            len += snprintf(buf+len, sizeof(buf) - len,"INFO ");
             break;
         case JL_WARN:
-            len += snprintf(buf+len, sizeof(buf) - len,"WARN");
+            len += snprintf(buf+len, sizeof(buf) - len,"WARN ");
             break;
         case JL_ERROR:  
             len += snprintf(buf+len, sizeof(buf) - len,"ERROR");
@@ -92,6 +98,7 @@ int _jl_log(enum jl_level level, const char* file_name, int line_number,FILE* st
             len += snprintf(buf+len, sizeof(buf) - len,"FATAL");
           break;
         default:
+            return -1;
             break;
         }
     }
@@ -120,9 +127,9 @@ int _jl_log(enum jl_level level, const char* file_name, int line_number,FILE* st
     }
     return r;
 }
-int _jl_logf(enum jl_level level, const char* file_name, int line_number, FILE* stream, const char* format, ...){
+int jl_jlogf(enum jl_level level, const char* file_name, int line_number, FILE* stream, const char* format, ...){
     if(level < ___jl_log_level) return 0;
-    // formating: [level/ time/date | line file]
+    // formating: [time-date|level|file:line]: message
     char buf[JL_MAX_MSG_LENGTH] = {0};
     int len = 0;
 
@@ -151,10 +158,10 @@ int _jl_logf(enum jl_level level, const char* file_name, int line_number, FILE* 
             len += snprintf(buf+len, sizeof(buf) - len,"\x1b[36mDEBUG\x1b[0m");
             break;
         case JL_INFO:
-            len += snprintf(buf+len, sizeof(buf) - len,"\x1b[32mINFO\x1b[0m");
+            len += snprintf(buf+len, sizeof(buf) - len,"\x1b[32mINFO\x1b[0m ");
             break;
         case JL_WARN:
-            len += snprintf(buf+len, sizeof(buf) - len,"\x1b[33mWARN\x1b[0m");
+            len += snprintf(buf+len, sizeof(buf) - len,"\x1b[33mWARN\x1b[0m ");
             break;
         case JL_ERROR:  
             len += snprintf(buf+len, sizeof(buf) - len,"\x1b[31mERROR\x1b[0m");
@@ -163,6 +170,7 @@ int _jl_logf(enum jl_level level, const char* file_name, int line_number, FILE* 
             len += snprintf(buf+len, sizeof(buf) - len,"\x1b[35mFATAL\x1b[0m");
           break;
         default:
+            return -1;
             break;
         }
     }else{
@@ -172,10 +180,10 @@ int _jl_logf(enum jl_level level, const char* file_name, int line_number, FILE* 
             len += snprintf(buf+len, sizeof(buf) - len,"DEBUG");
             break;
         case JL_INFO:
-            len += snprintf(buf+len, sizeof(buf) - len,"INFO");
+            len += snprintf(buf+len, sizeof(buf) - len,"INFO ");
             break;
         case JL_WARN:
-            len += snprintf(buf+len, sizeof(buf) - len,"WARN");
+            len += snprintf(buf+len, sizeof(buf) - len,"WARN ");
             break;
         case JL_ERROR:  
             len += snprintf(buf+len, sizeof(buf) - len,"ERROR");
@@ -184,6 +192,7 @@ int _jl_logf(enum jl_level level, const char* file_name, int line_number, FILE* 
             len += snprintf(buf+len, sizeof(buf) - len,"FATAL");
           break;
         default:
+            return -1;
             break;
         }
     }
