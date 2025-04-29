@@ -7,6 +7,14 @@
 
 #include "jyggalog.h"
 
+// function localtime_r wrapper to work with localtime_s(windows)
+#ifndef _WIN32
+int localtime_s(struct tm* tm, const time_t* time){
+    return (localtime_r(time,tm) != NULL) ? 0 : 1;
+}
+#endif /* _WIN32 */
+
+
 #define BMASK(i,m) (i & m)
 
 // configuration variables
